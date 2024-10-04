@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo List App</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Todo List App</h1>
+        <input type="text" id="new-task" placeholder="Enter a new task">
+        <button id="add-task">Add Task</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Tarea</th>
+                    <th>Status</th>
+                    <th>Ajustes</th>
+                </tr>
+            </thead>
+            <tbody id="task-list">
+                <!-- Las tareas serán cargadas dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function fetchTasks() {
+            const response = await fetch('/api/tasks');
+            const tasks = await response.json();
+
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+
+            tasks.forEach(task => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${task.id}</td>
+                    <td><input type="text" value="${task.descripcion}" readonly /></td>
+                    <td><input type="checkbox" class="status-checkbox" ${task.completado ? 'checked' : ''} /></td>
+                    <td>
+                        <button class="edit-btn">✏️</button>
+                        <button class="delete-btn">🗑️</button>
+                    </td>
+                `;
+
+                // Checkbox para cambiar el estado (completado o no)
+                const statusCheckbox = row.querySelector('.status-checkbox');
+                statusCheckbox.addEventListener('change', async () => {
+                    const isCompleted = statusCheckbox.checked;
+
+                    const response = await fetch(`/api/tasks/${task.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            completado: isCompleted
+                        })
+                    });
+
+                    if (!response.ok) {
+                        // Manejar el error si no se puede actualizar
+                        statusCheckbox.checked = !isCompleted; // Revertir el estado del checkbox si falla
+                    }
+                });
+
+                // Botón para editar tarea
+                row.querySelector('.edit-btn').addEventListener('click', () => {
+                    const input = row.querySelector('input[type="text"]');
+                    input.removeAttribute('readonly');
+                    input.focus();
+
+                    input.addEventListener('blur', async () => {
+                        const newDesc = input.value;
+
+                        const response = await fetch(`/api/tasks/${task.id}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ descripcion: newDesc })
+                        });
+
+                        if (response.ok) {
+                            input.setAttribute('readonly', 'true');
+                        }
+                    });
+                });
+
+                // Botón para eliminar tarea
+                row.querySelector('.delete-btn').addEventListener('click', async () => {
+                    const response = await fetch(`/api/tasks/${task.id}`, {
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        row.remove();
+                    }
+                });
+
+                taskList.appendChild(row);
+            });
+        }
+
+        // Añadir nueva tarea
+        document.getElementById('add-task').addEventListener('click', async () => {
+            const taskDesc = document.getElementById('new-task').value;
+            if (taskDesc.trim() === '') return;
+
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    descripcion: taskDesc,
+                    completado: false
+                })
+            });
+
+            if (response.ok) {
+                document.getElementById('new-task').value = '';
+                fetchTasks(); // Recargar la lista de tareas
+            }
+        });
+
+        // Cargar tareas cuando la página se carga
+        fetchTasks();
+    </script>
+</body>
+</html>

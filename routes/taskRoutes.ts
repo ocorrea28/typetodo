@@ -3,7 +3,6 @@ import { getAllTasks, getTaskById, createTask, updateTask, deleteTask } from '..
 
 const router = Router();
 
-// Rutas para las tareas
 router.get('/tasks', getAllTasks);
 router.get('/tasks/:id', getTaskById);
 router.post('/tasks', createTask);

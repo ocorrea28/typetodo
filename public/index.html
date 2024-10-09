@@ -15,22 +15,22 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Tarea</th>
+                    <th>Task</th>
                     <th>Status</th>
-                    <th>Ajustes</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="task-list">
-                <!-- Las tareas serán cargadas dinámicamente -->
+                <!-- Tasks will be loaded dynamically here -->
             </tbody>
         </table>
     </div>
 
     <script>
+        // Function to fetch tasks and populate the table
         async function fetchTasks() {
             const response = await fetch('/api/tasks');
             const tasks = await response.json();
-
             const taskList = document.getElementById('task-list');
             taskList.innerHTML = '';
 
@@ -46,58 +46,53 @@
                     </td>
                 `;
 
-                // Checkbox para cambiar el estado (completado o no)
+                // Checkbox for status
                 const statusCheckbox = row.querySelector('.status-checkbox');
                 statusCheckbox.addEventListener('change', async () => {
                     const isCompleted = statusCheckbox.checked;
-
                     const response = await fetch(`/api/tasks/${task.id}`, {
                         method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            completado: isCompleted
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ completado: isCompleted })
                     });
 
                     if (!response.ok) {
-                        // Manejar el error si no se puede actualizar
-                        statusCheckbox.checked = !isCompleted; // Revertir el estado del checkbox si falla
+                        alert('Failed to update task status');
+                        statusCheckbox.checked = !isCompleted;
                     }
                 });
 
-                // Botón para editar tarea
-                row.querySelector('.edit-btn').addEventListener('click', () => {
+                // Edit button
+                const editButton = row.querySelector('.edit-btn');
+                editButton.addEventListener('click', () => {
                     const input = row.querySelector('input[type="text"]');
                     input.removeAttribute('readonly');
                     input.focus();
 
                     input.addEventListener('blur', async () => {
                         const newDesc = input.value;
-
                         const response = await fetch(`/api/tasks/${task.id}`, {
                             method: 'PUT',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ descripcion: newDesc })
                         });
 
                         if (response.ok) {
                             input.setAttribute('readonly', 'true');
+                        } else {
+                            alert('Failed to update task description');
                         }
                     });
                 });
 
-                // Botón para eliminar tarea
-                row.querySelector('.delete-btn').addEventListener('click', async () => {
-                    const response = await fetch(`/api/tasks/${task.id}`, {
-                        method: 'DELETE'
-                    });
-
+                // Delete button
+                const deleteButton = row.querySelector('.delete-btn');
+                deleteButton.addEventListener('click', async () => {
+                    const response = await fetch(`/api/tasks/${task.id}`, { method: 'DELETE' });
                     if (response.ok) {
                         row.remove();
+                    } else {
+                        alert('Failed to delete task');
                     }
                 });
 
@@ -105,29 +100,26 @@
             });
         }
 
-        // Añadir nueva tarea
+        // Function to add a new task
         document.getElementById('add-task').addEventListener('click', async () => {
             const taskDesc = document.getElementById('new-task').value;
             if (taskDesc.trim() === '') return;
 
             const response = await fetch('/api/tasks', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    descripcion: taskDesc,
-                    completado: false
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descripcion: taskDesc, completado: false })
             });
 
             if (response.ok) {
                 document.getElementById('new-task').value = '';
-                fetchTasks(); // Recargar la lista de tareas
+                fetchTasks();
+            } else {
+                alert('Failed to add task');
             }
         });
 
-        // Cargar tareas cuando la página se carga
+        // Load tasks on page load
         fetchTasks();
     </script>
 </body>

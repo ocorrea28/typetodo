@@ -5,18 +5,18 @@
     "completado": false
   },
   {
-    "id": 4,
-    "descripcion": "Tarea Ejemplo 4",
-    "completado": false
-  },
-  {
     "id": 5,
     "descripcion": "Tarea Ejemplo 5",
-    "completado": false
+    "completado": true
   },
   {
     "id": 6,
     "descripcion": "Tarea Ejemplo 6",
     "completado": true
+  },
+  {
+    "id": 7,
+    "descripcion": "Tarea Ejemplo 7",
+    "completado": false
   }
 ]
